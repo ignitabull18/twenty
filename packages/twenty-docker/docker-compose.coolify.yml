@@ -81,7 +81,7 @@ services:
 
   front:
     build:
-      context: .
+      context: ../..
       dockerfile: packages/twenty-front/Dockerfile
     ports:
       - "80:3000"
