@@ -37,14 +37,19 @@ COPY ../../.yarn ./.yarn
 WORKDIR /app/packages/twenty-front
 RUN yarn build
 
-# Production stage
-FROM node:18-alpine AS runner
+# Production stage - Switch to Debian-based image to fix BusyBox user creation issue
+FROM node:18-slim AS runner
 
-# Install serve for production
+# Install serve for production and wget for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install serve globally
 RUN npm install -g serve
 
-# Create app user for security
-RUN addgroup -r app && adduser -r -g app app
+# Create app user for security using Debian-compatible commands
+RUN addgroup --system app && adduser --system --group app
 
 WORKDIR /app
 
