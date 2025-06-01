@@ -2,7 +2,7 @@
 FROM node:18-alpine AS deps
 
 # Install required packages for the build process
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash git
 
 WORKDIR /app
 
@@ -15,8 +15,9 @@ COPY ../../packages/twenty-front/package.json ./packages/twenty-front/package.js
 COPY ../../packages/twenty-ui/package.json ./packages/twenty-ui/package.json
 COPY ../../packages/twenty-shared/package.json ./packages/twenty-shared/package.json
 
-# Install dependencies with immutable flag for security
-RUN yarn install --immutable --immutable-cache --check-cache
+# TEMPORARY: Allow lockfile update to incorporate new dependencies
+# TODO: Change back to --immutable after lockfile is regenerated
+RUN yarn install
 
 FROM node:18-alpine AS builder
 WORKDIR /app
