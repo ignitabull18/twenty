@@ -78,6 +78,21 @@ services:
     restart: always
     command: ["--maxmemory-policy", "noeviction"]
 
+
+  front:
+    build:
+      context: .
+      dockerfile: packages/twenty-front/Dockerfile
+    ports:
+      - "80:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SERVER_URL: ${SERVER_URL:-https://twenty.ignitabull.org}
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: always
 volumes:
   db-data:
   server-local-data:
