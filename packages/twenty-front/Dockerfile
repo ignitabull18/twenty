@@ -44,9 +44,9 @@ ENV VITE_BUILD_SOURCEMAP=false
 # Set permissions for shell scripts before building
 RUN chmod +x /app/packages/twenty-front/scripts/inject-runtime-env.sh
 
-# Build the frontend application
-WORKDIR /app/packages/twenty-front
-RUN yarn build
+# Build the frontend application from root directory to maintain workspace resolution
+# This ensures Lingui config can properly import from twenty-shared/translations
+RUN yarn workspace twenty-front build
 
 # Production stage - Switch to Debian-based image to fix BusyBox user creation issue
 FROM node:18-slim AS runner
