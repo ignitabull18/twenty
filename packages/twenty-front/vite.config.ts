@@ -25,6 +25,7 @@ export default defineConfig(({ command, mode }) => {
     SSL_KEY_PATH,
     REACT_APP_PORT,
     IS_DEBUG_MODE,
+    DISABLE_LINGUI,
   } = env;
 
   const port = isNonEmptyString(REACT_APP_PORT)
@@ -63,6 +64,10 @@ export default defineConfig(({ command, mode }) => {
     console.log(`VITE_BUILD_SOURCEMAP: ${VITE_BUILD_SOURCEMAP}`);
   }
 
+  if (DISABLE_LINGUI === 'true') {
+    console.log(`DISABLE_LINGUI: ${DISABLE_LINGUI} - Skipping Lingui plugin for Docker build`);
+  }
+
   if (VITE_DISABLE_TYPESCRIPT_CHECKER !== 'true') {
     checkers['typescript'] = {
       tsconfigPath: tsConfigPath,
@@ -76,6 +81,75 @@ export default defineConfig(({ command, mode }) => {
         'eslint ../../packages/twenty-front --report-unused-disable-directives --max-warnings 0 --config .eslintrc.cjs',
     };
   }
+
+  // Build plugins array conditionally
+  const plugins = [
+    react({
+      jsxImportSource: '@emotion/react',
+      plugins: [['@lingui/swc-plugin', {}]],
+    }),
+    tsconfigPaths({
+      projects: ['tsconfig.json'],
+    }),
+    svgr(),
+  ];
+
+  // Only add Lingui plugin if not disabled (for Docker builds)
+  if (DISABLE_LINGUI !== 'true') {
+    plugins.push(
+      lingui({
+        configPath: path.resolve(__dirname, './lingui.config.ts'),
+      })
+    );
+  }
+
+  plugins.push(
+    checker(checkers),
+    // TODO: fix this, we have to restrict the include to only the components that are using linaria
+    // Otherwise the build will fail because wyw tries to include emotion styled components
+    wyw({
+      include: [
+        '**/CurrencyDisplay.tsx',
+        '**/EllipsisDisplay.tsx',
+        '**/ContactLink.tsx',
+        '**/BooleanDisplay.tsx',
+        '**/LinksDisplay.tsx',
+        '**/RoundedLink.tsx',
+        '**/OverflowingTextWithTooltip.tsx',
+        '**/Chip.tsx',
+        '**/Tag.tsx',
+        '**/MultiSelectFieldDisplay.tsx',
+        '**/RatingInput.tsx',
+        '**/RecordTableCellContainer.tsx',
+        '**/RecordTableCellDisplayContainer.tsx',
+        '**/Avatar.tsx',
+        '**/RecordTableBodyDroppable.tsx',
+        '**/RecordTableCellBaseContainer.tsx',
+        '**/RecordTableCellTd.tsx',
+        '**/RecordTableTd.tsx',
+        '**/RecordTableHeaderDragDropColumn.tsx',
+        '**/ActorDisplay.tsx',
+        '**/BooleanDisplay.tsx',
+        '**/CurrencyDisplay.tsx',
+        '**/TextDisplay.tsx',
+        '**/EllipsisDisplay.tsx',
+        '**/AvatarChip.tsx',
+        '**/URLDisplay.tsx',
+        '**/EmailsDisplay.tsx',
+        '**/PhonesDisplay.tsx',
+        '**/MultiSelectDisplay.tsx',
+      ],
+      babelOptions: {
+        presets: ['@babel/preset-typescript', '@babel/preset-react'],
+      },
+    }),
+    visualizer({
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      filename: 'dist/stats.html',
+    }) as PluginOption, // https://github.com/btd/rollup-plugin-visualizer/issues/162#issuecomment-1538265997,
+  );
 
   return {
     root: __dirname,
@@ -103,64 +177,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
 
-    plugins: [
-      react({
-        jsxImportSource: '@emotion/react',
-        plugins: [['@lingui/swc-plugin', {}]],
-      }),
-      tsconfigPaths({
-        projects: ['tsconfig.json'],
-      }),
-      svgr(),
-      lingui({
-        configPath: path.resolve(__dirname, './lingui.config.ts'),
-      }),
-      checker(checkers),
-      // TODO: fix this, we have to restrict the include to only the components that are using linaria
-      // Otherwise the build will fail because wyw tries to include emotion styled components
-      wyw({
-        include: [
-          '**/CurrencyDisplay.tsx',
-          '**/EllipsisDisplay.tsx',
-          '**/ContactLink.tsx',
-          '**/BooleanDisplay.tsx',
-          '**/LinksDisplay.tsx',
-          '**/RoundedLink.tsx',
-          '**/OverflowingTextWithTooltip.tsx',
-          '**/Chip.tsx',
-          '**/Tag.tsx',
-          '**/MultiSelectFieldDisplay.tsx',
-          '**/RatingInput.tsx',
-          '**/RecordTableCellContainer.tsx',
-          '**/RecordTableCellDisplayContainer.tsx',
-          '**/Avatar.tsx',
-          '**/RecordTableBodyDroppable.tsx',
-          '**/RecordTableCellBaseContainer.tsx',
-          '**/RecordTableCellTd.tsx',
-          '**/RecordTableTd.tsx',
-          '**/RecordTableHeaderDragDropColumn.tsx',
-          '**/ActorDisplay.tsx',
-          '**/BooleanDisplay.tsx',
-          '**/CurrencyDisplay.tsx',
-          '**/TextDisplay.tsx',
-          '**/EllipsisDisplay.tsx',
-          '**/AvatarChip.tsx',
-          '**/URLDisplay.tsx',
-          '**/EmailsDisplay.tsx',
-          '**/PhonesDisplay.tsx',
-          '**/MultiSelectDisplay.tsx',
-        ],
-        babelOptions: {
-          presets: ['@babel/preset-typescript', '@babel/preset-react'],
-        },
-      }),
-      visualizer({
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-        filename: 'dist/stats.html',
-      }) as PluginOption, // https://github.com/btd/rollup-plugin-visualizer/issues/162#issuecomment-1538265997,
-    ],
+    plugins,
 
     optimizeDeps: {
       exclude: [
