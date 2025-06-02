@@ -22,6 +22,9 @@ RUN yarn install
 FROM node:18-alpine AS builder
 WORKDIR /app
 
+# Install bash for shell scripts used in the build process
+RUN apk add --no-cache bash
+
 # Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/twenty-ui/node_modules ./packages/twenty-ui/node_modules
@@ -32,6 +35,14 @@ COPY ../../packages ./packages
 COPY ../../tools ./tools
 COPY ../../package.json ../../yarn.lock ../../.yarnrc.yml ./
 COPY ../../.yarn ./.yarn
+
+# Set build environment variables to prevent Vite issues
+ENV NODE_ENV=production
+ENV CI=true
+ENV VITE_BUILD_SOURCEMAP=false
+
+# Set permissions for shell scripts before building
+RUN chmod +x /app/packages/twenty-front/scripts/inject-runtime-env.sh
 
 # Build the frontend application
 WORKDIR /app/packages/twenty-front
