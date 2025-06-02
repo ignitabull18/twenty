@@ -40,6 +40,8 @@ COPY ../../.yarn ./.yarn
 ENV NODE_ENV=production
 ENV CI=true
 ENV VITE_BUILD_SOURCEMAP=false
+# Disable Lingui plugin in Docker builds
+ENV DOCKER_BUILD=true
 
 # Set permissions for shell scripts before building
 RUN chmod +x /app/packages/twenty-front/scripts/inject-runtime-env.sh
