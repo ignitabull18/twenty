@@ -1,0 +1,70 @@
+{
+  "webhooks": {
+    "slack": {
+      "name": "Slack Integration",
+      "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "events": [
+        "company.created",
+        "person.created", 
+        "opportunity.created",
+        "opportunity.stage_changed"
+      ],
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "payload_template": {
+        "text": "New {{event_type}}: {{object_name}}",
+        "channel": "#crm-updates",
+        "username": "Twenty CRM",
+        "icon_emoji": ":briefcase:"
+      }
+    },
+    "zapier": {
+      "name": "Zapier Integration",
+      "url": "https://hooks.zapier.com/hooks/catch/YOUR_ZAPIER_WEBHOOK_ID",
+      "events": [
+        "company.created",
+        "person.created",
+        "opportunity.created",
+        "task.created"
+      ],
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_ZAPIER_API_KEY"
+      }
+    },
+    "custom_api": {
+      "name": "Custom API Integration", 
+      "url": "https://your-api.example.com/twenty-webhook",
+      "events": [
+        "*"
+      ],
+      "headers": {
+        "Content-Type": "application/json",
+        "X-API-Key": "your-api-key-here",
+        "X-Webhook-Source": "twenty-crm"
+      },
+      "payload_template": {
+        "event": "{{event_type}}",
+        "timestamp": "{{timestamp}}",
+        "data": "{{object_data}}"
+      }
+    }
+  },
+  "email_templates": {
+    "welcome": {
+      "subject": "Welcome to {{workspace_name}}!",
+      "template": "Welcome {{user_name}}, you've been invited to join {{workspace_name}} CRM."
+    },
+    "notification": {
+      "subject": "New {{object_type}} assigned to you",
+      "template": "Hi {{assignee_name}}, a new {{object_type}} has been assigned to you: {{object_name}}"
+    }
+  },
+  "api_endpoints": {
+    "graphql": "https://twenty.ignitabull.org/graphql",
+    "rest": "https://twenty.ignitabull.org/rest",
+    "webhooks": "https://twenty.ignitabull.org/webhooks/workflows",
+    "health": "https://twenty.ignitabull.org/healthz"
+  }
+} 
